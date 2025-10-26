@@ -1,0 +1,44 @@
+# Prometheus配置文件
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'my-framework'
+
+# 告警规则
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+# 抓取配置
+scrape_configs:
+  # Prometheus自身监控
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # 网关服务监控
+  - job_name: 'framework-gateway'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['gateway:8080']
+        labels:
+          service: 'gateway'
+
+  # 认证服务监控
+  - job_name: 'framework-auth'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['auth:8081']
+        labels:
+          service: 'auth'
+
+  # 用户服务监控
+  - job_name: 'framework-user'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['user:8082']
+        labels:
+          service: 'user'
+

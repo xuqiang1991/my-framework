@@ -1,0 +1,107 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: framework-auth
+  
+  # Nacos配置
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR:127.0.0.1:8848}
+        namespace: ${SPRING_CLOUD_NACOS_DISCOVERY_NAMESPACE:dev}
+      config:
+        server-addr: ${SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR:127.0.0.1:8848}
+        namespace: ${SPRING_CLOUD_NACOS_CONFIG_NAMESPACE:dev}
+        file-extension: yml
+  
+  # Redis配置
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:127.0.0.1}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+      password: ${SPRING_DATA_REDIS_PASSWORD:}
+      database: ${SPRING_DATA_REDIS_DATABASE:0}
+    host: ${SA_TOKEN_ALONE_REDIS_HOST:127.0.0.1}
+    port: ${SA_TOKEN_ALONE_REDIS_PORT:6379}
+    password: ${SA_TOKEN_ALONE_REDIS_PASSWORD:}
+      database: 0
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
+
+# Sa-Token配置
+sa-token:
+  # Token名称
+  token-name: Authorization
+  # Token前缀
+  token-prefix: Bearer
+  # Token有效期（单位：秒）7天
+  timeout: 604800
+  # Token临时有效期（指定时间内无操作就视为token过期）（单位：秒）
+  active-timeout: -1
+  # 是否允许同一账号并发登录
+  is-concurrent: true
+  # 在多人登录同一账号时，是否共用一个token
+  is-share: false
+  # Token风格
+  token-style: uuid
+  # 是否输出操作日志
+  is-log: true
+  # 配置Sa-Token单独使用Redis（可选，一般使用全局Redis）
+  alone-redis:
+    # Redis数据库索引
+    database: 1
+    # Redis服务器地址
+    host: 127.0.0.1
+    # Redis服务器端口
+    port: 6379
+    # Redis密码
+    password: 
+    # 连接超时时间
+    timeout: 10s
+
+# Knife4j配置
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+
+# 监控配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    export:
+      prometheus:
+        enabled: true
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.myframework: DEBUG
+  pattern:
+    console: '%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n'
+  file:
+    name: logs/${spring.application.name}.log
+

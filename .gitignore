@@ -1,0 +1,51 @@
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Logs
+logs/
+*.log
+log/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker volumes
+docker/mysql/data/
+docker/redis/data/
+docker/nacos/logs/
+docker/prometheus/data/
+docker/grafana/data/
+
+# Spring Boot
+*.jar
+*.war
+*.ear
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+
