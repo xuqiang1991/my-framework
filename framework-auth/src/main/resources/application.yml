@@ -25,14 +25,7 @@ spring:
       database: ${SPRING_DATA_REDIS_DATABASE:0}
     host: ${SA_TOKEN_ALONE_REDIS_HOST:127.0.0.1}
     port: ${SA_TOKEN_ALONE_REDIS_PORT:6379}
-    password: ${SA_TOKEN_ALONE_REDIS_PASSWORD:}
-      database: 0
-      lettuce:
-        pool:
-          max-active: 8
-          max-idle: 8
-          min-idle: 0
-          max-wait: -1ms
+    password: { database: 0, lettuce: { pool: { max-active: 8, max-idle: 8, min-idle: 0, max-wait: -1ms } } }
 
 # Sa-Token配置
 sa-token:
