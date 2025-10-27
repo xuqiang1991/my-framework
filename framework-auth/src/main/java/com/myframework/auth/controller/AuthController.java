@@ -35,7 +35,7 @@ public class AuthController {
      */
     @Operation(summary = "用户登出")
     @PostMapping("/logout")
-    public Result<Void> logout(@RequestParam(required = false) String token) {
+    public Result<Void> logout(@RequestParam(name = "token", required = false) String token) {
         authService.logout(token);
         return Result.success();
     }
@@ -45,7 +45,7 @@ public class AuthController {
      */
     @Operation(summary = "刷新Token")
     @PostMapping("/refresh")
-    public Result<String> refreshToken(@RequestParam String token) {
+    public Result<String> refreshToken(@RequestParam(name = "token") String token) {
         String newToken = authService.refreshToken(token);
         return Result.success(newToken);
     }
@@ -55,7 +55,7 @@ public class AuthController {
      */
     @Operation(summary = "验证Token")
     @PostMapping("/validate")
-    public Result<Boolean> validateToken(@RequestParam String token) {
+    public Result<Boolean> validateToken(@RequestParam(name = "token") String token) {
         boolean valid = authService.validateToken(token);
         return Result.success(valid);
     }
