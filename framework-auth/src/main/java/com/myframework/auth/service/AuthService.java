@@ -13,6 +13,7 @@ import com.myframework.common.result.ResultCode;
 import com.myframework.common.util.JwtUtil;
 import com.myframework.common.util.RedisUtil;
 import lombok.RequiredArgsConstructor;
+import org.apache.dubbo.config.annotation.DubboReference;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -29,7 +30,8 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class AuthService {
     
-    private final UserApi userApi;
+    @DubboReference(check = false)
+    private UserApi userApi;
     private final RedisUtil redisUtil;
     
     /**

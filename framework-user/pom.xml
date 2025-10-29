@@ -99,6 +99,18 @@
             <artifactId>micrometer-registry-prometheus</artifactId>
         </dependency>
 
+        <!-- Dubbo RPC -->
+        <dependency>
+            <groupId>org.apache.dubbo</groupId>
+            <artifactId>dubbo-spring-boot-starter</artifactId>
+            <version>3.2.8</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.dubbo</groupId>
+            <artifactId>dubbo-registry-nacos</artifactId>
+            <version>3.2.8</version>
+        </dependency>
+
         <!-- Sentinel 限流熔断 -->
         <dependency>
             <groupId>com.alibaba.cloud</groupId>

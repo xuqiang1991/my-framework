@@ -98,3 +98,18 @@ logging:
   file:
     name: logs/${spring.application.name}.log
 
+# Dubbo 配置
+dubbo:
+  application:
+    name: ${spring.application.name}
+  protocol:
+    name: dubbo
+    port: -1
+  registry:
+    address: nacos://${SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR:127.0.0.1:8848}
+    parameters:
+      namespace: ${SPRING_CLOUD_NACOS_DISCOVERY_NAMESPACE:dev}
+  consumer:
+    check: false
+    timeout: 5000
+

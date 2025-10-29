@@ -12,7 +12,7 @@
 
     <artifactId>framework-api</artifactId>
     <name>Framework API</name>
-    <description>API模块 - 定义服务间Feign接口</description>
+    <description>API模块 - 定义服务间RPC接口（Dubbo）</description>
 
     <dependencies>
         <!-- Common模块 -->
@@ -21,17 +21,7 @@
             <artifactId>framework-common</artifactId>
         </dependency>
 
-        <!-- Spring Cloud OpenFeign -->
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-openfeign</artifactId>
-        </dependency>
-
-        <!-- Spring Cloud Loadbalancer -->
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-loadbalancer</artifactId>
-        </dependency>
+        <!-- 无框架依赖：仅声明接口与DTO，供 Dubbo 使用 -->
 
         <!-- Lombok -->
         <dependency>
