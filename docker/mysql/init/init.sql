@@ -251,3 +251,110 @@ INSERT INTO `sys_user_role` (`user_id`, `role_id`)
 VALUES 
 ('1', '1'),
 ('2', '2');
+
+/******************************************/
+/*   单点登录（SSO）相关表结构            */
+/******************************************/
+
+-- 平台表（用于管理接入SSO的各个平台）
+CREATE TABLE IF NOT EXISTS `sys_platform` (
+  `platform_id` varchar(64) NOT NULL COMMENT '平台ID',
+  `platform_code` varchar(64) NOT NULL COMMENT '平台编码',
+  `platform_name` varchar(128) NOT NULL COMMENT '平台名称',
+  `platform_url` varchar(512) DEFAULT NULL COMMENT '平台地址',
+  `platform_desc` varchar(512) DEFAULT NULL COMMENT '平台描述',
+  `status` tinyint(1) DEFAULT 1 COMMENT '状态：0-禁用，1-启用',
+  `deleted` tinyint(1) DEFAULT 0 COMMENT '删除标志：0-未删除，1-已删除',
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`platform_id`),
+  UNIQUE KEY `uk_platform_code` (`platform_code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='平台表';
+
+-- 用户平台关联表（支持一个用户关联多个平台，实现账号绑定）
+CREATE TABLE IF NOT EXISTS `sys_user_platform` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'ID',
+  `user_id` varchar(64) NOT NULL COMMENT '用户ID',
+  `platform_id` varchar(64) NOT NULL COMMENT '平台ID',
+  `platform_user_id` varchar(128) DEFAULT NULL COMMENT '平台用户ID',
+  `platform_username` varchar(128) DEFAULT NULL COMMENT '平台用户名',
+  `bind_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '绑定时间',
+  `last_login_time` datetime DEFAULT NULL COMMENT '最后登录时间',
+  `status` tinyint(1) DEFAULT 1 COMMENT '状态：0-解绑，1-已绑定',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_user_platform` (`user_id`, `platform_id`),
+  KEY `idx_platform_user` (`platform_id`, `platform_user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户平台关联表';
+
+-- OAuth2客户端表（存储接入SSO的第三方应用信息）
+CREATE TABLE IF NOT EXISTS `sys_oauth_client` (
+  `client_id` varchar(64) NOT NULL COMMENT '客户端ID',
+  `client_secret` varchar(256) NOT NULL COMMENT '客户端密钥',
+  `client_name` varchar(128) NOT NULL COMMENT '客户端名称',
+  `platform_id` varchar(64) NOT NULL COMMENT '关联的平台ID',
+  `redirect_uris` varchar(1024) NOT NULL COMMENT '重定向URI列表（逗号分隔）',
+  `grant_types` varchar(256) DEFAULT 'authorization_code,refresh_token' COMMENT '授权类型（逗号分隔）',
+  `scope` varchar(256) DEFAULT 'read,write' COMMENT '授权范围',
+  `access_token_validity` int(11) DEFAULT 3600 COMMENT '访问令牌有效期（秒）',
+  `refresh_token_validity` int(11) DEFAULT 604800 COMMENT '刷新令牌有效期（秒）',
+  `auto_approve` tinyint(1) DEFAULT 0 COMMENT '自动授权：0-需要用户确认，1-自动授权',
+  `status` tinyint(1) DEFAULT 1 COMMENT '状态：0-禁用，1-启用',
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`client_id`),
+  KEY `idx_platform_id` (`platform_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='OAuth2客户端表';
+
+-- OAuth2授权码表（存储授权码，用于授权码模式）
+CREATE TABLE IF NOT EXISTS `sys_oauth_code` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'ID',
+  `code` varchar(128) NOT NULL COMMENT '授权码',
+  `client_id` varchar(64) NOT NULL COMMENT '客户端ID',
+  `user_id` varchar(64) NOT NULL COMMENT '用户ID',
+  `redirect_uri` varchar(512) NOT NULL COMMENT '重定向URI',
+  `scope` varchar(256) DEFAULT NULL COMMENT '授权范围',
+  `state` varchar(128) DEFAULT NULL COMMENT '状态码（防CSRF攻击）',
+  `expires_at` datetime NOT NULL COMMENT '过期时间',
+  `used` tinyint(1) DEFAULT 0 COMMENT '是否已使用：0-未使用，1-已使用',
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_code` (`code`),
+  KEY `idx_client_user` (`client_id`, `user_id`),
+  KEY `idx_expires` (`expires_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='OAuth2授权码表';
+
+-- OAuth2令牌表（存储访问令牌和刷新令牌）
+CREATE TABLE IF NOT EXISTS `sys_oauth_token` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'ID',
+  `access_token` varchar(256) NOT NULL COMMENT '访问令牌',
+  `refresh_token` varchar(256) DEFAULT NULL COMMENT '刷新令牌',
+  `client_id` varchar(64) NOT NULL COMMENT '客户端ID',
+  `user_id` varchar(64) NOT NULL COMMENT '用户ID',
+  `scope` varchar(256) DEFAULT NULL COMMENT '授权范围',
+  `token_type` varchar(32) DEFAULT 'Bearer' COMMENT '令牌类型',
+  `access_token_expires_at` datetime NOT NULL COMMENT '访问令牌过期时间',
+  `refresh_token_expires_at` datetime DEFAULT NULL COMMENT '刷新令牌过期时间',
+  `revoked` tinyint(1) DEFAULT 0 COMMENT '是否已撤销：0-有效，1-已撤销',
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_access_token` (`access_token`),
+  UNIQUE KEY `uk_refresh_token` (`refresh_token`),
+  KEY `idx_client_user` (`client_id`, `user_id`),
+  KEY `idx_access_expires` (`access_token_expires_at`),
+  KEY `idx_refresh_expires` (`refresh_token_expires_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='OAuth2令牌表';
+
+-- 初始化测试平台和OAuth2客户端
+INSERT INTO `sys_platform` (`platform_id`, `platform_code`, `platform_name`, `platform_url`, `platform_desc`)
+VALUES 
+('1', 'MAIN_APP', '主应用平台', 'http://localhost:8080', '主应用系统'),
+('2', 'ADMIN_PLATFORM', '管理后台', 'http://localhost:8081', '管理后台系统'),
+('3', 'MOBILE_APP', '移动端应用', 'http://localhost:8082', '移动端应用');
+
+-- 初始化OAuth2测试客户端（密钥：secret123）
+INSERT INTO `sys_oauth_client` (`client_id`, `client_secret`, `client_name`, `platform_id`, `redirect_uris`, `grant_types`, `scope`, `auto_approve`)
+VALUES 
+('main-app-client', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', '主应用客户端', '1', 'http://localhost:8080/callback,http://localhost:8080/login/callback', 'authorization_code,refresh_token', 'read,write,user_info', 1),
+('admin-client', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', '管理后台客户端', '2', 'http://localhost:8081/callback', 'authorization_code,refresh_token', 'read,write,admin', 0),
+('mobile-client', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', '移动端客户端', '3', 'myapp://callback', 'authorization_code,refresh_token', 'read,write,user_info', 1);

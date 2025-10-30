@@ -1,6 +1,5 @@
 package com.myframework.common.util;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -9,12 +8,20 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Redis工具类
+ * 提供常用的Redis操作方法，简化Redis操作
  */
 @Component
 public class RedisUtil {
     
-    @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
+    private final RedisTemplate<String, Object> redisTemplate;
+    
+    /**
+     * 构造函数注入
+     * @param redisTemplate Redis模板
+     */
+    public RedisUtil(RedisTemplate<String, Object> redisTemplate) {
+        this.redisTemplate = redisTemplate;
+    }
     
     /**
      * 设置缓存

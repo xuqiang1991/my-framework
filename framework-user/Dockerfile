@@ -46,6 +46,9 @@ RUN --mount=type=cache,target=/root/.m2 \
 # 第二阶段：运行镜像
 FROM eclipse-temurin:21-jre-alpine
 
+# 安装 curl（用于健康检查）
+RUN apk add --no-cache curl
+
 # 设置工作目录
 WORKDIR /app
 
@@ -57,6 +60,9 @@ EXPOSE 8082
 
 # 设置JVM参数
 ENV JAVA_OPTS="-Xms512m -Xmx512m"
+
+# SkyWalking Agent 将通过 volume 挂载，无需在镜像中包含
+# 启动命令会由 JAVA_TOOL_OPTIONS 环境变量自动添加 -javaagent 参数
 
 # 启动应用
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

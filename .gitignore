@@ -10,27 +10,23 @@ buildNumber.properties
 .mvn/timing.properties
 .mvn/wrapper/maven-wrapper.jar
 
-# IDE
-.idea/
-*.iml
-*.ipr
-*.iws
+# Eclipse
+.settings/
 .project
 .classpath
-.settings/
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# VS Code
 .vscode/
-*.swp
-*.swo
-*~
 
-# Logs
-logs/
-*.log
-log/
-
-# OS
+# Mac
 .DS_Store
-Thumbs.db
 
 # Docker volumes
 docker/mysql/data/
@@ -38,14 +34,18 @@ docker/redis/data/
 docker/nacos/logs/
 docker/prometheus/data/
 docker/grafana/data/
+docker/elasticsearch/data/
 
-# Spring Boot
-*.jar
-*.war
-*.ear
+# SkyWalking Agent (需要单独下载)
+docker/skywalking/agent/
 
-# Temporary files
+# Logs
+logs/
+*.log
+*.log.*
+
+# Temp files
 *.tmp
-*.temp
 *.bak
-
+*.swp
+*~.nib

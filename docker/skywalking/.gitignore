@@ -1,0 +1,8 @@
+# 忽略 SkyWalking Agent 文件（需要单独下载）
+agent/
+
+# 保留 README 和下载脚本
+!README.md
+!download-agent.sh
+!download-agent.bat
+

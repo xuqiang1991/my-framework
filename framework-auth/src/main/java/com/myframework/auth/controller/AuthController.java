@@ -1,6 +1,5 @@
 package com.myframework.auth.controller;
 
-import com.myframework.api.auth.dto.LoginRequest;
 import com.myframework.api.auth.dto.LoginResponse;
 import com.myframework.auth.service.AuthService;
 import com.myframework.common.result.Result;
@@ -11,8 +10,10 @@ import org.springframework.web.bind.annotation.*;
 
 /**
  * 认证控制器
+ * 注意：传统的用户名密码登录已废弃，请使用 OAuth2 SSO 登录
+ * 登录入口：/auth/sso/login 或 /oauth2/authorize
  */
-@Tag(name = "认证管理", description = "用户登录、登出、Token管理")
+@Tag(name = "认证管理", description = "OAuth2 SSO 认证相关接口")
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
@@ -21,17 +22,19 @@ public class AuthController {
     private final AuthService authService;
     
     /**
-     * 用户登录
+     * 获取当前用户信息
+     * 用于已登录用户获取自己的信息
      */
-    @Operation(summary = "用户登录")
-    @PostMapping("/login")
-    public Result<LoginResponse> login(@RequestBody LoginRequest request) {
-        LoginResponse response = authService.login(request);
-        return Result.success(response);
+    @Operation(summary = "获取当前用户信息")
+    @GetMapping("/info")
+    public Result<LoginResponse> getUserInfo() {
+        LoginResponse userInfo = authService.getCurrentUserInfo();
+        return Result.success(userInfo);
     }
     
     /**
      * 用户登出
+     * 清除当前用户的登录状态
      */
     @Operation(summary = "用户登出")
     @PostMapping("/logout")
@@ -41,43 +44,14 @@ public class AuthController {
     }
     
     /**
-     * 刷新Token
-     */
-    @Operation(summary = "刷新Token")
-    @PostMapping("/refresh")
-    public Result<String> refreshToken(@RequestParam(name = "token") String token) {
-        String newToken = authService.refreshToken(token);
-        return Result.success(newToken);
-    }
-    
-    /**
-     * 验证Token
-     */
-    @Operation(summary = "验证Token")
-    @PostMapping("/validate")
-    public Result<Boolean> validateToken(@RequestParam(name = "token") String token) {
-        boolean valid = authService.validateToken(token);
-        return Result.success(valid);
-    }
-    
-    /**
      * 获取验证码
+     * 用于登录页面的验证码功能
      */
     @Operation(summary = "获取验证码")
     @GetMapping("/captcha")
     public Result<String> getCaptcha() {
         String captcha = authService.generateCaptcha();
         return Result.success(captcha);
-    }
-    
-    /**
-     * 获取当前用户信息
-     */
-    @Operation(summary = "获取当前用户信息")
-    @GetMapping("/info")
-    public Result<LoginResponse> getUserInfo() {
-        LoginResponse userInfo = authService.getCurrentUserInfo();
-        return Result.success(userInfo);
     }
 }
 

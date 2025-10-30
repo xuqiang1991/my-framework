@@ -120,6 +120,70 @@ services:
     networks:
       - my-framework-network
 
+  # SkyWalking OAP Server（数据收集和分析）
+  skywalking-oap:
+    image: apache/skywalking-oap-server:9.7.0
+    container_name: my-framework-skywalking-oap
+    restart: always
+    ports:
+      - "11800:11800"  # gRPC 端口
+      - "12800:12800"  # HTTP 端口
+    environment:
+      SW_STORAGE: elasticsearch
+      SW_STORAGE_ES_CLUSTER_NODES: elasticsearch:9200
+      SW_HEALTH_CHECKER: default
+      SW_TELEMETRY: prometheus
+      JAVA_OPTS: "-Xms512m -Xmx512m"
+    depends_on:
+      - elasticsearch
+    networks:
+      - my-framework-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:12800/internal/l7check || exit 1"]
+      interval: 15s  # 缩短检查间隔,更快发现服务就绪
+      timeout: 10s
+      retries: 10  # 增加重试次数,给予更多启动时间
+
+  # SkyWalking UI（可视化界面）
+  skywalking-ui:
+    image: apache/skywalking-ui:9.7.0
+    container_name: my-framework-skywalking-ui
+    restart: always
+    ports:
+      - "8088:8080"
+    environment:
+      SW_OAP_ADDRESS: http://skywalking-oap:12800
+      SW_ZIPKIN_ADDRESS: http://skywalking-oap:9412
+    depends_on:
+      skywalking-oap:
+        condition: service_healthy
+    networks:
+      - my-framework-network
+
+  # Elasticsearch（SkyWalking 存储后端）
+  elasticsearch:
+    image: elasticsearch:8.11.0
+    container_name: my-framework-elasticsearch
+    restart: always
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+      cluster.name: skywalking
+      network.host: 0.0.0.0
+    volumes:
+      - ./docker/elasticsearch/data:/usr/share/elasticsearch/data
+    networks:
+      - my-framework-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
   # 网关服务
   gateway:
     build:
@@ -136,12 +200,19 @@ services:
       SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR: nacos:8848
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
+      # SkyWalking 配置已暂时禁用
+      # SW_AGENT_NAME: gateway-service
+      # SW_AGENT_COLLECTOR_BACKEND_SERVICES: skywalking-oap:11800
       JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+    # volumes:
+    #   - ./docker/skywalking/agent:/skywalking/agent
     depends_on:
       nacos:
         condition: service_healthy
       redis:
         condition: service_healthy
+      # skywalking-oap:
+      #   condition: service_healthy
     networks:
       - my-framework-network
 
@@ -159,14 +230,27 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR: nacos:8848
       SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR: nacos:8848
+      SPRING_DATASOURCE_DRUID_URL: jdbc:mysql://mysql:3306/my_framework?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/my_framework?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
+      # SkyWalking 配置已暂时禁用
+      # SW_AGENT_NAME: auth-service
+      # SW_AGENT_COLLECTOR_BACKEND_SERVICES: skywalking-oap:11800
       JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5006"
+    # volumes:
+    #   - ./docker/skywalking/agent:/skywalking/agent
     depends_on:
+      mysql:
+        condition: service_healthy
       nacos:
         condition: service_healthy
       redis:
         condition: service_healthy
+      # skywalking-oap:
+      #   condition: service_healthy
     networks:
       - my-framework-network
 
@@ -190,7 +274,12 @@ services:
       SPRING_DATASOURCE_PASSWORD: root
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
+      # SkyWalking 配置已暂时禁用
+      # SW_AGENT_NAME: user-service
+      # SW_AGENT_COLLECTOR_BACKEND_SERVICES: skywalking-oap:11800
       JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5007"
+    # volumes:
+    #   - ./docker/skywalking/agent:/skywalking/agent
     depends_on:
       mysql:
         condition: service_healthy
@@ -198,6 +287,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      # skywalking-oap:
+      #   condition: service_healthy
     networks:
       - my-framework-network
 
