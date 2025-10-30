@@ -339,47 +339,44 @@ Content-Type: application/json
 
 ## 👥 用户管理
 
-### 如何添加用户
+本系统提供完整的用户注册与管理解决方案，支持三种用户注册方式：
 
-系统提供三种方式添加用户：
+### 1. 用户自助注册 📝
 
-#### 1. 用户自助注册
-```bash
-POST /user/register/self
-{
-  "username": "newuser",
-  "password": "123456",
-  "nickname": "新用户",
-  "phone": "13800138000",
-  "email": "user@example.com",
-  "captcha": "验证码",
-  "captchaKey": "验证码Key"
-}
-```
+用户可以通过前端注册页面自行创建账户。
 
-#### 2. 管理员创建用户
-```bash
-POST /user/register/admin
-Authorization: Bearer {管理员token}
-{
-  "username": "employee001",
-  "password": "Welcome123",
-  "nickname": "员工001"
-}
-```
+**访问地址**：http://localhost:8082/self-register.html
 
-#### 3. 平台用户自动注册
-当用户首次通过 OAuth2 SSO 从其他平台登录时，系统会自动创建用户并绑定平台关系。
+**特性**：
+- 图形验证码保护
+- 实时用户名检查
+- 注册成功自动跳转登录
 
-#### 4. 数据库直接插入
-```sql
-INSERT INTO sys_user (user_id, username, password, nickname, status, deleted)
-VALUES ('new_user_001', 'dbuser', 
-        '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi',
-        '数据库用户', 1, 0);
-```
+### 2. 第三方平台注册 🔌
 
-**详细说明**：以上为完整的用户管理方式
+第三方系统可通过安全的API直接注册用户。
+
+**接口地址**：`POST /api/third-party/register`
+
+**特性**：
+- API Key + 签名双重验证
+- 防重放攻击（时间戳验证）
+- 智能处理用户名冲突
+- 自动绑定平台关系
+
+### 3. 管理员创建用户 👨‍💼
+
+管理员可通过管理后台创建和维护用户。
+
+**访问地址**：http://localhost:8082/admin-user-management.html
+
+**功能**：
+- 用户CRUD管理
+- 搜索和分页
+- 启用/禁用用户
+- 实时统计数据
+
+**详细说明**：请查看 [用户注册与管理指南](docs/USER_MANAGEMENT.md)
 
 ## 📚 文档
 
@@ -403,18 +400,26 @@ VALUES ('new_user_001', 'dbuser',
    - 跨平台单点登录
    - 安全最佳实践
 
-2. **[SKYWALKING.md](SKYWALKING.md)** - SkyWalking 分布式追踪服务
+2. **[USER_MANAGEMENT.md](USER_MANAGEMENT.md)** - 用户注册与管理指南（新增）
+   - 用户自助注册流程
+   - 第三方平台注册API
+   - 管理员用户管理
+   - API签名与安全
+   - 数据库表结构
+   - 最佳实践建议
+
+3. **[SKYWALKING.md](SKYWALKING.md)** - SkyWalking 分布式追踪服务
    - 功能特性和使用场景
    - 快速开始指南
    - UI 功能说明
    - 性能监控和追踪分析
 
-3. **[SETUP.md](SETUP.md)** - 环境配置指南
+4. **[SETUP.md](SETUP.md)** - 环境配置指南
    - 环境要求和安装
    - IDE 配置
    - 常见问题解决
 
-4. **[DEPLOY.md](DEPLOY.md)** - 部署指南
+5. **[DEPLOY.md](DEPLOY.md)** - 部署指南
    - 本地开发部署
    - Docker 部署
    - 生产环境部署

@@ -64,6 +64,11 @@ public class User implements Serializable {
     private String avatar;
     
     /**
+     * 所属平台ID
+     */
+    private String platformId;
+    
+    /**
      * 状态：0-禁用，1-启用
      */
     private Integer status;

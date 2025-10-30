@@ -35,23 +35,37 @@ public class OAuth2Controller {
      */
     @Operation(summary = "OAuth2授权端点")
     @GetMapping("/authorize")
-    public RedirectView authorize(OAuth2AuthorizeRequest request) {
-        log.info("OAuth2授权请求: clientId={}, redirectUri={}", request.getClientId(), request.getRedirectUri());
+    public RedirectView authorize(
+            @RequestParam("response_type") String responseType,
+            @RequestParam("client_id") String clientId,
+            @RequestParam("redirect_uri") String redirectUri,
+            @RequestParam(value = "scope", required = false) String scope,
+            @RequestParam(value = "state", required = false) String state) {
+        
+        log.info("OAuth2授权请求: clientId={}, redirectUri={}", clientId, redirectUri);
+        
+        // 构造请求对象
+        OAuth2AuthorizeRequest request = new OAuth2AuthorizeRequest();
+        request.setResponseType(responseType);
+        request.setClientId(clientId);
+        request.setRedirectUri(redirectUri);
+        request.setScope(scope);
+        request.setState(state);
         
         // 验证客户端
-        OAuthClient client = oauth2Service.validateClient(request.getClientId(), null);
+        OAuthClient client = oauth2Service.validateClient(clientId, null);
         
         // 验证重定向URI
-        oauth2Service.validateRedirectUri(client, request.getRedirectUri());
+        oauth2Service.validateRedirectUri(client, redirectUri);
         
         // 检查用户是否已登录
         if (!StpUtil.isLogin()) {
-            // 未登录，重定向到登录页面
-            String loginUrl = String.format("/auth/sso/login?client_id=%s&redirect_uri=%s&scope=%s&state=%s",
-                    request.getClientId(),
-                    request.getRedirectUri(),
-                    request.getScope() != null ? request.getScope() : "",
-                    request.getState() != null ? request.getState() : "");
+            // 未登录，重定向到SSO登录页面
+            String loginUrl = String.format("/sso-login.html?client_id=%s&redirect_uri=%s&scope=%s&state=%s",
+                    clientId,
+                    redirectUri,
+                    scope != null ? scope : "",
+                    state != null ? state : "");
             return new RedirectView(loginUrl);
         }
         
@@ -59,10 +73,10 @@ public class OAuth2Controller {
         if (client.getAutoApprove() == 0) {
             // 需要用户确认授权，重定向到授权确认页面
             String approveUrl = String.format("/auth/sso/approve?client_id=%s&redirect_uri=%s&scope=%s&state=%s",
-                    request.getClientId(),
-                    request.getRedirectUri(),
-                    request.getScope() != null ? request.getScope() : "",
-                    request.getState() != null ? request.getState() : "");
+                    clientId,
+                    redirectUri,
+                    scope != null ? scope : "",
+                    state != null ? state : "");
             return new RedirectView(approveUrl);
         }
         
@@ -71,9 +85,9 @@ public class OAuth2Controller {
         String code = oauth2Service.generateAuthorizationCode(userId, request);
         
         // 构建重定向URL
-        String redirectUrl = request.getRedirectUri() + 
+        String redirectUrl = redirectUri + 
                 "?code=" + code +
-                (request.getState() != null ? "&state=" + request.getState() : "");
+                (state != null ? "&state=" + state : "");
         
         log.info("OAuth2授权成功: userId={}, code={}, redirectUrl={}", userId, code, redirectUrl);
         

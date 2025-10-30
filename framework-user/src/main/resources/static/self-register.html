@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>用户自助注册</title>
+    <style>
+        :root {
+            color-scheme: light dark;
+            --color-bg: #f5f7fa;
+            --color-card: #ffffff;
+            --color-primary: #2f54eb;
+            --color-primary-hover: #1d39c4;
+            --color-border: #d9d9d9;
+            --color-text: #1f1f1f;
+            --color-text-light: #595959;
+            --shadow-md: 0 10px 30px rgba(31, 35, 41, 0.1);
+        }
+
+        body {
+            margin: 0;
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: var(--color-bg);
+            color: var(--color-text);
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 40px 16px;
+        }
+
+        .card {
+            width: clamp(320px, 90vw, 420px);
+            background: var(--color-card);
+            border-radius: 16px;
+            padding: 32px 28px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .card h1 {
+            margin: 0 0 8px;
+            font-size: 26px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .subtitle {
+            margin: 0 0 24px;
+            font-size: 14px;
+            text-align: center;
+            color: var(--color-text-light);
+        }
+
+        .form-item {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 14px;
+            color: var(--color-text-light);
+        }
+
+        input {
+            width: 100%;
+            height: 40px;
+            padding: 0 12px;
+            border-radius: 8px;
+            border: 1px solid var(--color-border);
+            font-size: 14px;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        input:focus {
+            border-color: var(--color-primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(47, 84, 235, 0.15);
+        }
+
+        .btn {
+            width: 100%;
+            height: 44px;
+            border: none;
+            border-radius: 8px;
+            background: var(--color-primary);
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .btn:hover {
+            background: var(--color-primary-hover);
+        }
+
+        .message {
+            margin-top: 16px;
+            font-size: 14px;
+            line-height: 1.6;
+            border-radius: 8px;
+            padding: 12px 14px;
+            display: none;
+        }
+
+        .message.success {
+            display: block;
+            background: #f6ffed;
+            color: #389e0d;
+            border: 1px solid #b7eb8f;
+        }
+
+        .message.error {
+            display: block;
+            background: #fff2f0;
+            color: #cf1322;
+            border: 1px solid #ffa39e;
+        }
+
+        .helper {
+            margin-top: 18px;
+            font-size: 12px;
+            color: var(--color-text-light);
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <section class="card" aria-label="用户自助注册">
+        <h1>创建账号</h1>
+        <p class="subtitle">欢迎加入单点登录平台，请填写基本信息完成注册。</p>
+        <form id="registerForm" novalidate>
+            <div class="form-item">
+                <label for="username">用户名 *</label>
+                <input id="username" name="username" type="text" required minlength="4" maxlength="32"
+                       placeholder="4-32位字母、数字或下划线" pattern="^[A-Za-z0-9_]+$" />
+            </div>
+            <div class="form-item">
+                <label for="password">密码 *</label>
+                <input id="password" name="password" type="password" required minlength="8" maxlength="32"
+                       placeholder="至少8位，建议包含大小写与数字" />
+            </div>
+            <div class="form-item">
+                <label for="confirmPassword">确认密码 *</label>
+                <input id="confirmPassword" name="confirmPassword" type="password" required minlength="8" maxlength="32"
+                       placeholder="再次输入密码" />
+            </div>
+            <div class="form-item">
+                <label for="nickname">昵称</label>
+                <input id="nickname" name="nickname" type="text" maxlength="32" placeholder="展示给其他用户的名称" />
+            </div>
+            <div class="form-item">
+                <label for="email">邮箱</label>
+                <input id="email" name="email" type="email" maxlength="128" placeholder="用于找回密码与通知" />
+            </div>
+            <div class="form-item">
+                <label for="phone">手机号</label>
+                <input id="phone" name="phone" type="tel" maxlength="20" placeholder="用于安全验证" />
+            </div>
+            <div class="form-item">
+                <label for="captcha">验证码 *</label>
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <input id="captcha" name="captcha" type="text" required maxlength="4" 
+                           placeholder="请输入验证码" style="flex: 1;" />
+                    <img id="captchaImage" src="" alt="验证码" 
+                         style="height: 40px; border-radius: 4px; cursor: pointer; border: 1px solid var(--color-border);" 
+                         onclick="refreshCaptcha()" title="点击刷新验证码" />
+                </div>
+            </div>
+            <button class="btn" type="submit">立即注册</button>
+            <section id="message" class="message" role="alert"></section>
+        </form>
+        <p class="helper">
+            已有账号？<a href="/oauth2/authorize?response_type=code&client_id=main-app-client&redirect_uri=http://localhost:8080/callback&scope=read,write&state=login" 
+                        style="color: var(--color-primary); text-decoration: none;">立即登录</a>
+        </p>
+        <p class="helper" style="margin-top: 8px; font-size: 11px; color: var(--color-text-light);">
+            提交后系统将立即为您创建账号。注册成功后，您可以使用该账号登录所有接入的平台。
+        </p>
+    </section>
+</div>
+
+<script>
+    const form = document.getElementById('registerForm');
+    const messageEl = document.getElementById('message');
+    let captchaKey = '';
+
+    // 页面加载时获取验证码
+    document.addEventListener('DOMContentLoaded', function() {
+        refreshCaptcha();
+    });
+
+    function setMessage(type, text) {
+        messageEl.className = `message ${type}`;
+        messageEl.textContent = text;
+        messageEl.style.display = 'block';
+    }
+
+    // 获取验证码
+    async function refreshCaptcha() {
+        try {
+            const response = await fetch('/captcha/generate');
+            if (!response.ok) {
+                throw new Error('获取验证码失败');
+            }
+            
+            const result = await response.json();
+            if (result.code === 200) {
+                captchaKey = result.data.captchaKey;
+                document.getElementById('captchaImage').src = result.data.captchaImage;
+            } else {
+                throw new Error(result.message || '获取验证码失败');
+            }
+        } catch (error) {
+            console.error('获取验证码失败:', error);
+            setMessage('error', '获取验证码失败，请刷新页面重试');
+        }
+    }
+
+    async function submitRegister(data) {
+        const response = await fetch('/user/register/self', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        });
+
+        const result = await response.json();
+        
+        if (result.code !== 200) {
+            throw new Error(result.message || '注册失败，请稍后再试。');
+        }
+
+        return result;
+    }
+
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        messageEl.style.display = 'none';
+
+        const formData = new FormData(form);
+        const payload = Object.fromEntries(formData.entries());
+
+        if (payload.password !== payload.confirmPassword) {
+            setMessage('error', '两次输入的密码不一致。');
+            return;
+        }
+
+        try {
+            await submitRegister({
+                username: payload.username.trim(),
+                password: payload.password,
+                nickname: payload.nickname?.trim() || undefined,
+                email: payload.email?.trim() || undefined,
+                phone: payload.phone?.trim() || undefined,
+                captcha: payload.captcha.trim(),
+                captchaKey: captchaKey,
+            });
+            setMessage('success', '注册成功！3秒后自动跳转到登录页...');
+            form.reset();
+            refreshCaptcha(); // 刷新验证码
+            
+            // 3秒后跳转到登录页
+            setTimeout(() => {
+                window.location.href = '/oauth2/authorize?response_type=code&client_id=main-app-client&redirect_uri=http://localhost:8080/callback&scope=read,write&state=login';
+            }, 3000);
+        } catch (error) {
+            setMessage('error', error.message);
+            refreshCaptcha(); // 验证失败后刷新验证码
+        }
+    });
+</script>
+</body>
+</html>
+

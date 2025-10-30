@@ -117,12 +117,15 @@ public class OAuth2Service {
      */
     @Transactional(rollbackFor = Exception.class)
     public OAuth2TokenResponse exchangeToken(OAuth2TokenRequest request) {
+        log.info("exchangeToken - 收到的grant_type: {}, 期望值: {}", request.getGrantType(), BusinessConstant.OAuth2.GRANT_TYPE_AUTHORIZATION_CODE);
+        
         if (BusinessConstant.OAuth2.GRANT_TYPE_AUTHORIZATION_CODE.equals(request.getGrantType())) {
             return exchangeCodeForToken(request);
         } else if (BusinessConstant.OAuth2.GRANT_TYPE_REFRESH_TOKEN.equals(request.getGrantType())) {
             return refreshAccessToken(request);
         } else {
-            throw new BusinessException(ResultCode.PARAM_VALID_ERROR.getCode(), "不支持的授权类型");
+            throw new BusinessException(ResultCode.PARAM_VALID_ERROR.getCode(), 
+                "不支持的授权类型: " + request.getGrantType() + ", 仅支持: authorization_code 或 refresh_token");
         }
     }
     

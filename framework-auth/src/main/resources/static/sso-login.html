@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>统一登录 - SSO</title>
+    <style>
+        :root {
+            color-scheme: light dark;
+            --color-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --color-card: #ffffff;
+            --color-primary: #667eea;
+            --color-primary-hover: #5568d3;
+            --color-border: #e0e0e0;
+            --color-text: #2c3e50;
+            --color-text-light: #7f8c8d;
+            --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: var(--color-bg);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-container {
+            width: clamp(320px, 90vw, 420px);
+            background: var(--color-card);
+            border-radius: 20px;
+            padding: 40px 35px;
+            box-shadow: var(--shadow-lg);
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--color-primary);
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            color: white;
+            margin-bottom: 15px;
+        }
+
+        .logo h1 {
+            font-size: 28px;
+            color: var(--color-text);
+            margin-bottom: 8px;
+        }
+
+        .logo p {
+            font-size: 14px;
+            color: var(--color-text-light);
+        }
+
+        .client-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .client-info p {
+            font-size: 13px;
+            color: var(--color-text-light);
+        }
+
+        .client-info strong {
+            color: var(--color-primary);
+            font-size: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--color-text);
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--color-text-light);
+            font-size: 18px;
+        }
+
+        input {
+            width: 100%;
+            height: 48px;
+            padding: 0 15px 0 45px;
+            border: 2px solid var(--color-border);
+            border-radius: 10px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            background: #fafafa;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            background: white;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .remember-forgot {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            font-size: 13px;
+        }
+
+        .remember-forgot label {
+            display: flex;
+            align-items: center;
+            color: var(--color-text-light);
+            cursor: pointer;
+        }
+
+        .remember-forgot input[type="checkbox"] {
+            width: auto;
+            height: auto;
+            margin-right: 6px;
+        }
+
+        .remember-forgot a {
+            color: var(--color-primary);
+            text-decoration: none;
+        }
+
+        .btn-login {
+            width: 100%;
+            height: 48px;
+            background: var(--color-primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-login:hover {
+            background: var(--color-primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        .btn-login:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .message {
+            margin-top: 20px;
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 13px;
+            color: var(--color-text-light);
+        }
+
+        .footer a {
+            color: var(--color-primary);
+            text-decoration: none;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">
+            <div class="logo-icon">🔐</div>
+            <h1>统一登录</h1>
+            <p>Single Sign-On</p>
+        </div>
+
+        <div class="client-info" id="clientInfo">
+            <p>正在登录到 <strong id="clientName">...</strong></p>
+        </div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username">用户名</label>
+                <div class="input-wrapper">
+                    <i>👤</i>
+                    <input type="text" id="username" name="username" placeholder="请输入用户名" required autofocus>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="password">密码</label>
+                <div class="input-wrapper">
+                    <i>🔒</i>
+                    <input type="password" id="password" name="password" placeholder="请输入密码" required>
+                </div>
+            </div>
+
+            <div class="remember-forgot">
+                <label>
+                    <input type="checkbox" id="remember" name="remember">
+                    记住我
+                </label>
+                <a href="http://localhost:8082/self-register.html" target="_blank">还没有账号？注册</a>
+            </div>
+
+            <button type="submit" class="btn-login" id="loginBtn">
+                登录
+            </button>
+
+            <div id="message" class="message"></div>
+        </form>
+
+        <div class="footer">
+            <p>测试账号：admin / 123456</p>
+            <p style="margin-top: 10px;">
+                <a href="http://localhost:8082/doc.html" target="_blank">API文档</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // 从URL获取OAuth2参数
+        const urlParams = new URLSearchParams(window.location.search);
+        const clientId = urlParams.get('client_id');
+        const redirectUri = urlParams.get('redirect_uri');
+        const scope = urlParams.get('scope');
+        const state = urlParams.get('state');
+
+        // 页面加载时获取客户端信息
+        document.addEventListener('DOMContentLoaded', async function() {
+            if (clientId) {
+                try {
+                    const response = await fetch(`/auth/sso/login?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope || ''}&state=${state || ''}`);
+                    const result = await response.json();
+                    
+                    if (result.code === 200 && result.data) {
+                        document.getElementById('clientName').textContent = result.data.clientName || clientId;
+                        
+                        // 如果已经登录，直接生成授权码并跳转
+                        if (result.data.isLogin) {
+                            showMessage('success', '检测到已登录，正在跳转...');
+                            // 重新请求授权端点
+                            window.location.href = `/oauth2/authorize?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope || ''}&state=${state || ''}`;
+                        }
+                    }
+                } catch (error) {
+                    console.error('获取客户端信息失败:', error);
+                }
+            } else {
+                document.getElementById('clientInfo').style.display = 'none';
+            }
+        });
+
+        // 处理登录表单提交
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const loginBtn = document.getElementById('loginBtn');
+            
+            if (!username || !password) {
+                showMessage('error', '请输入用户名和密码');
+                return;
+            }
+            
+            // 禁用按钮，显示加载状态
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<span class="loading"></span> 登录中...';
+            
+            try {
+                const response = await fetch(`/auth/sso/login?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope || ''}&state=${state || ''}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.code === 200 && result.data) {
+                    showMessage('success', '登录成功！正在跳转...');
+                    
+                    // 延迟跳转，让用户看到成功提示
+                    setTimeout(() => {
+                        window.location.href = result.data.redirectUrl;
+                    }, 500);
+                } else {
+                    throw new Error(result.message || '登录失败');
+                }
+            } catch (error) {
+                console.error('登录失败:', error);
+                showMessage('error', error.message || '登录失败，请检查用户名和密码');
+                
+                // 恢复按钮状态
+                loginBtn.disabled = false;
+                loginBtn.textContent = '登录';
+            }
+        });
+        
+        // 显示消息
+        function showMessage(type, text) {
+            const messageEl = document.getElementById('message');
+            messageEl.className = `message ${type}`;
+            messageEl.textContent = text;
+            messageEl.style.display = 'block';
+            
+            // 3秒后自动隐藏错误消息
+            if (type === 'error') {
+                setTimeout(() => {
+                    messageEl.style.display = 'none';
+                }, 3000);
+            }
+        }
+    </script>
+</body>
+</html>
+

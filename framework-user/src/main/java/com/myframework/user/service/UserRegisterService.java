@@ -31,6 +31,7 @@ public class UserRegisterService {
     private final UserMapper userMapper;
     private final UserPlatformService userPlatformService;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final CaptchaService captchaService;
     
     /**
      * 用户自助注册
@@ -40,8 +41,10 @@ public class UserRegisterService {
         // 验证必填字段
         validateRegisterRequest(request);
         
-        // TODO: 验证验证码
-        // validateCaptcha(request.getCaptcha(), request.getCaptchaKey());
+        // 验证验证码
+        if (!captchaService.verifyCaptcha(request.getCaptchaKey(), request.getCaptcha())) {
+            throw new BusinessException(ResultCode.PARAM_VALID_ERROR.getCode(), "验证码错误或已过期");
+        }
         
         // 检查用户名是否已存在
         if (!isUsernameAvailable(request.getUsername())) {
