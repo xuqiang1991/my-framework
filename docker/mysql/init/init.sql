@@ -199,6 +199,7 @@ CREATE TABLE IF NOT EXISTS `sys_user` (
   `email` varchar(128) DEFAULT NULL COMMENT '邮箱',
   `gender` tinyint(1) DEFAULT 0 COMMENT '性别：0-未知，1-男，2-女',
   `avatar` varchar(512) DEFAULT NULL COMMENT '头像',
+  `platform_id` varchar(64) DEFAULT '1' COMMENT '所属平台ID',
   `status` tinyint(1) DEFAULT 1 COMMENT '状态：0-禁用，1-启用',
   `deleted` tinyint(1) DEFAULT 0 COMMENT '删除标志：0-未删除，1-已删除',
   `create_by` varchar(64) DEFAULT NULL COMMENT '创建者',
@@ -207,7 +208,8 @@ CREATE TABLE IF NOT EXISTS `sys_user` (
   `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `remark` varchar(512) DEFAULT NULL COMMENT '备注',
   PRIMARY KEY (`user_id`),
-  UNIQUE KEY `uk_username` (`username`)
+  UNIQUE KEY `uk_username` (`username`),
+  KEY `idx_platform_id` (`platform_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户表';
 
 -- 初始化用户（密码：123456）
@@ -355,6 +357,34 @@ VALUES
 -- 初始化OAuth2测试客户端（密钥：secret123）
 INSERT INTO `sys_oauth_client` (`client_id`, `client_secret`, `client_name`, `platform_id`, `redirect_uris`, `grant_types`, `scope`, `auto_approve`)
 VALUES 
-('main-app-client', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', '主应用客户端', '1', 'http://localhost:8080/callback,http://localhost:8080/login/callback', 'authorization_code,refresh_token', 'read,write,user_info', 1),
-('admin-client', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', '管理后台客户端', '2', 'http://localhost:8081/callback', 'authorization_code,refresh_token', 'read,write,admin', 0),
+('main-app-client', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', '主应用平台', '1', 'http://localhost:8080/callback,http://localhost:8080/login/callback,http://localhost:8082/admin-user-management.html', 'authorization_code,refresh_token', 'read,write,user_info,admin', 1),
+('admin-client', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', '管理后台客户端', '2', 'http://localhost:8081/callback,http://localhost:8082/admin-user-management.html', 'authorization_code,refresh_token', 'read,write,admin', 1),
 ('mobile-client', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', '移动端客户端', '3', 'myapp://callback', 'authorization_code,refresh_token', 'read,write,user_info', 1);
+
+/******************************************/
+/*   第三方API管理表结构                  */
+/******************************************/
+
+-- API凭证表（用于管理第三方平台的API Key和Secret）
+CREATE TABLE IF NOT EXISTS `sys_api_credential` (
+  `credential_id` varchar(64) NOT NULL COMMENT '凭证ID',
+  `platform_id` varchar(64) NOT NULL COMMENT '平台ID',
+  `api_key` varchar(128) NOT NULL COMMENT 'API Key（公开）',
+  `api_secret` varchar(128) NOT NULL COMMENT 'API Secret（私密）',
+  `status` tinyint(1) DEFAULT 1 COMMENT '状态：0-禁用，1-启用',
+  `expires_at` datetime DEFAULT NULL COMMENT '过期时间（NULL表示永不过期）',
+  `last_used_at` datetime DEFAULT NULL COMMENT '最后使用时间',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `remark` varchar(512) DEFAULT NULL COMMENT '备注',
+  PRIMARY KEY (`credential_id`),
+  UNIQUE KEY `uk_api_key` (`api_key`),
+  KEY `idx_platform_id` (`platform_id`),
+  KEY `idx_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='API凭证表';
+
+-- 初始化测试API凭证（用于第三方平台测试）
+INSERT INTO `sys_api_credential` (`credential_id`, `platform_id`, `api_key`, `api_secret`, `status`, `remark`)
+VALUES 
+('1', '1', 'ak_test_main_app_001', 'sk_test_main_app_secret_001', 1, '主应用平台测试凭证'),
+('2', '2', 'ak_test_admin_platform_001', 'sk_test_admin_platform_secret_001', 1, '管理后台测试凭证');
