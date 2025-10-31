@@ -1,17 +1,22 @@
 package com.myframework.auth.controller;
 
 import cn.dev33.satoken.stp.StpUtil;
+import com.myframework.api.user.UserApi;
+import com.myframework.api.user.dto.UserDTO;
 import com.myframework.auth.dto.OAuth2AuthorizeRequest;
 import com.myframework.auth.dto.OAuth2TokenRequest;
 import com.myframework.auth.dto.OAuth2TokenResponse;
 import com.myframework.auth.entity.OAuthClient;
 import com.myframework.auth.entity.OAuthToken;
 import com.myframework.auth.service.OAuth2Service;
+import com.myframework.common.exception.BusinessException;
 import com.myframework.common.result.Result;
+import com.myframework.common.result.ResultCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.view.RedirectView;
 
@@ -28,6 +33,9 @@ import jakarta.servlet.http.HttpServletRequest;
 public class OAuth2Controller {
     
     private final OAuth2Service oauth2Service;
+    
+    @DubboReference(check = false)
+    private UserApi userApi;
     
     /**
      * OAuth2授权端点
@@ -163,16 +171,32 @@ public class OAuth2Controller {
      */
     @Operation(summary = "获取用户信息")
     @GetMapping("/userinfo")
-    public Result<Object> userinfo(HttpServletRequest request) {
+    public Result<UserDTO> userinfo(HttpServletRequest request) {
         // 从请求头获取访问令牌
         String authorization = request.getHeader("Authorization");
         
         // 验证令牌
         OAuthToken token = oauth2Service.validateAccessToken(authorization);
         
-        // TODO: 根据userId获取用户详细信息
-        // 这里简化处理，实际应该调用用户服务获取完整信息
-        return Result.success(token);
+        // 从token中获取用户ID
+        String userId = token.getUserId();
+        if (userId == null) {
+            log.error("令牌中用户ID为空: accessToken={}", token.getAccessToken());
+            throw new BusinessException(ResultCode.USER_NOT_FOUND);
+        }
+        
+        // 调用用户服务获取用户详细信息
+        Result<UserDTO> userResult = userApi.getUserById(userId);
+        if (userResult == null || userResult.getData() == null) {
+            log.error("获取用户信息失败: userId={}", userId);
+            throw new BusinessException(ResultCode.USER_NOT_FOUND);
+        }
+        
+        UserDTO user = userResult.getData();
+        log.info("获取用户信息成功: userId={}, username={}", user.getUserId(), user.getUsername());
+        
+        // 返回用户完整信息
+        return Result.success(user);
     }
 }
 

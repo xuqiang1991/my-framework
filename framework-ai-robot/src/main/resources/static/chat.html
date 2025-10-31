@@ -499,10 +499,19 @@
                     return;
                 }
                 token = localStorage.getItem('access_token');
+                // 刷新令牌后，重新获取用户信息
+                username = null;
             }
 
-            // 显示用户信息
-            document.getElementById('userInfo').textContent = `你好，${username}`;
+            // 如果用户名不存在，从API获取用户信息
+            if (!username) {
+                await loadUserInfo(token);
+                username = localStorage.getItem('username') || '用户';
+            }
+
+            // 显示用户信息（如果仍然为null，使用默认值）
+            const displayUsername = username || '用户';
+            document.getElementById('userInfo').textContent = `你好，${displayUsername}`;
 
             // 加载机器人列表
             await loadRobots();
@@ -793,6 +802,36 @@
                 }
             } catch (error) {
                 console.error('刷新令牌失败:', error);
+            }
+            return false;
+        }
+
+        // 获取用户信息
+        async function loadUserInfo(accessToken) {
+            try {
+                const response = await fetch('http://localhost:8081/oauth2/userinfo', {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`
+                    }
+                });
+
+                const data = await response.json();
+                if (data.code === 200 && data.data) {
+                    // 保存用户信息
+                    if (data.data.username) {
+                        localStorage.setItem('username', data.data.username);
+                    }
+                    if (data.data.userId) {
+                        localStorage.setItem('userId', data.data.userId);
+                    }
+                    if (data.data.nickname) {
+                        localStorage.setItem('nickname', data.data.nickname);
+                    }
+                    return true;
+                }
+            } catch (error) {
+                console.warn('获取用户信息失败:', error);
+                // 不影响主流程，继续执行
             }
             return false;
         }
