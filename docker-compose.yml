@@ -292,6 +292,47 @@ services:
     networks:
       - my-framework-network
 
+  # AI机器人服务
+  ai-robot:
+    build:
+      context: .
+      dockerfile: framework-ai-robot/Dockerfile
+    container_name: my-framework-ai-robot
+    restart: always
+    ports:
+      - "8083:8083"
+      - "5008:5008"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR: nacos:8848
+      SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR: nacos:8848
+      SPRING_DATASOURCE_DRUID_URL: jdbc:mysql://mysql:3306/ai_robot?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/ai_robot?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      # Spring AI OpenAI配置（请替换为实际的API Key）
+      SPRING_AI_OPENAI_API_KEY: ${OPENAI_API_KEY:-sk-79014baaa6ab4e28ae5b869a12a21f74}
+      SPRING_AI_OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://dashscope.aliyuncs.com/compatible-mode/v1}
+      # SkyWalking 配置已暂时禁用
+      # SW_AGENT_NAME: ai-robot-service
+      # SW_AGENT_COLLECTOR_BACKEND_SERVICES: skywalking-oap:11800
+      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5008"
+    # volumes:
+    #   - ./docker/skywalking/agent:/skywalking/agent
+    depends_on:
+      mysql:
+        condition: service_healthy
+      nacos:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      # skywalking-oap:
+      #   condition: service_healthy
+    networks:
+      - my-framework-network
+
 networks:
   my-framework-network:
     driver: bridge

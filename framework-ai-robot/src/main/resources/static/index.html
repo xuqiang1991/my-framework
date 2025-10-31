@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI机器人 - 欢迎</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .welcome-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            overflow: hidden;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 40px;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .hero p {
+            font-size: 18px;
+            opacity: 0.9;
+            margin-bottom: 30px;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 15px 40px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid white;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .feature {
+            text-align: center;
+        }
+
+        .feature-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .feature h3 {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .feature p {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .info-box {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .info-box h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .info-box ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .info-box li {
+            padding: 8px 0;
+            color: #555;
+            font-size: 14px;
+        }
+
+        .info-box li:before {
+            content: "✓ ";
+            color: #4caf50;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        .footer {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            color: #999;
+            font-size: 13px;
+        }
+
+        code {
+            background: #f0f0f0;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="welcome-container">
+        <div class="hero">
+            <h1>🤖 AI机器人</h1>
+            <p>基于Spring AI的智能对话系统</p>
+            <div class="hero-buttons">
+                <a href="login.html" class="btn btn-primary">立即开始</a>
+                <a href="#" class="btn btn-secondary" onclick="checkStatus(); return false;">系统状态</a>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="features">
+                <div class="feature">
+                    <div class="feature-icon">💬</div>
+                    <h3>智能对话</h3>
+                    <p>支持多轮对话，理解上下文，提供智能回复</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🎭</div>
+                    <h3>多种角色</h3>
+                    <p>通用助手、代码助手、写作助手等多种AI角色</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">📝</div>
+                    <h3>会话管理</h3>
+                    <p>自动保存对话历史，随时回顾精彩内容</p>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <h3>🚀 快速开始</h3>
+                <ul>
+                    <li>点击"立即开始"按钮进入登录页面</li>
+                    <li>使用测试账号登录：用户名 <code>admin</code> 或 <code>user</code>，密码 <code>123456</code></li>
+                    <li>选择一个AI机器人开始对话</li>
+                    <li>享受智能对话体验！</li>
+                </ul>
+            </div>
+
+            <div class="info-box">
+                <h3>⚠️ 当前状态</h3>
+                <ul>
+                    <li>AI功能目前使用模拟响应（Spring AI框架更新中）</li>
+                    <li>机器人配置、会话管理等功能正常使用</li>
+                    <li>数据会正常保存到数据库</li>
+                    <li>等Spring AI 1.0.0正式版发布后将恢复完整AI功能</li>
+                </ul>
+            </div>
+
+            <div class="footer">
+                <p>AI机器人服务 v1.0.0 | 基于Spring Boot 3.2.5 & Spring AI</p>
+                <p>端口: 8083 | API文档: <a href="/doc.html" style="color: #667eea;">Knife4j文档</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function checkStatus() {
+            try {
+                const response = await fetch('/actuator/health');
+                const data = await response.json();
+                
+                if (data.status === 'UP') {
+                    alert('✅ 系统运行正常\n\n服务状态: ' + data.status + '\n所有组件: 正常');
+                } else {
+                    alert('⚠️ 系统状态异常\n\n请检查服务配置');
+                }
+            } catch (error) {
+                alert('❌ 无法连接到服务\n\n请确认服务已启动');
+            }
+        }
+
+        // 检查是否已登录
+        const token = localStorage.getItem('token');
+        if (token) {
+            // 已登录，显示"进入对话"按钮
+            const primaryBtn = document.querySelector('.btn-primary');
+            primaryBtn.textContent = '进入对话';
+            primaryBtn.href = 'chat.html';
+        }
+    </script>
+</body>
+</html>
+

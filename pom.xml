@@ -19,6 +19,7 @@
         <module>framework-gateway</module>
         <module>framework-auth</module>
         <module>framework-user</module>
+        <module>framework-ai-robot</module>
     </modules>
 
     <properties>
