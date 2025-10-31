@@ -12,16 +12,149 @@
 
 ## 🔐 认证说明
 
-所有需要认证的接口都需要在请求头中携带Token：
+AI机器人服务使用**SSO（单点登录）OAuth2授权认证**，不提供直接登录接口。所有需要认证的接口都需要在请求头中携带访问令牌：
 
 ```http
-Authorization: Bearer {your-token-here}
+Authorization: Bearer {access-token}
 ```
 
-获取Token的方式：
-1. 通过认证服务登录：`POST http://localhost:8080/api/auth/login`
-2. 获取返回的token
-3. 在后续请求中使用该token
+### OAuth2 授权流程
+
+#### 步骤 1：引导用户到授权页面
+
+构建授权URL，引导用户访问：
+
+```http
+GET http://localhost:8081/oauth2/authorize?client_id=ai-robot-client&redirect_uri=http://localhost:8083/callback&response_type=code&scope=read,write,user_info,ai_chat&state={随机字符串}
+```
+
+**参数说明**：
+| 参数 | 必填 | 说明 |
+|------|------|------|
+| client_id | 是 | 客户端ID：`ai-robot-client` |
+| redirect_uri | 是 | 回调地址：`http://localhost:8083/callback` |
+| response_type | 是 | 固定值：`code` |
+| scope | 否 | 授权范围：`read,write,user_info,ai_chat` |
+| state | 否 | 防CSRF攻击的随机字符串 |
+
+**JavaScript示例**：
+```javascript
+// 生成随机state
+const state = Math.random().toString(36).substring(7);
+sessionStorage.setItem('oauth_state', state);
+
+// 构建授权URL
+const authUrl = 'http://localhost:8081/oauth2/authorize?' +
+  'client_id=ai-robot-client&' +
+  'redirect_uri=' + encodeURIComponent('http://localhost:8083/callback') + '&' +
+  'response_type=code&' +
+  'scope=read,write,user_info,ai_chat&' +
+  'state=' + state;
+
+// 跳转到授权页面
+window.location.href = authUrl;
+```
+
+#### 步骤 2：用户在SSO页面登录
+
+用户将被重定向到SSO登录页面，输入用户名和密码登录。
+
+#### 步骤 3：获取授权码
+
+登录成功后，用户将被重定向到回调地址：
+
+```
+http://localhost:8083/callback?code={授权码}&state={原state值}
+```
+
+#### 步骤 4：使用授权码换取访问令牌
+
+```http
+POST http://localhost:8081/oauth2/token
+Content-Type: application/json
+
+{
+  "grant_type": "authorization_code",
+  "code": "{授权码}",
+  "client_id": "ai-robot-client",
+  "client_secret": "secret123",
+  "redirect_uri": "http://localhost:8083/callback.html"
+}
+```
+
+**响应示例**：
+```json
+{
+  "code": 200,
+  "data": {
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "refresh_token": "def456...",
+    "token_type": "Bearer",
+    "expires_in": 3600,
+    "scope": "read,write,user_info,ai_chat"
+  }
+}
+```
+
+#### 步骤 5：使用访问令牌调用API
+
+```http
+GET /api/ai/chat/conversations
+Authorization: Bearer {access_token}
+```
+
+### 刷新令牌
+
+当访问令牌过期时，可以使用刷新令牌获取新的访问令牌：
+
+```http
+POST http://localhost:8081/oauth2/token
+Content-Type: application/json
+
+{
+  "grant_type": "refresh_token",
+  "refresh_token": "{refresh_token}",
+  "client_id": "ai-robot-client",
+  "client_secret": "secret123"
+}
+```
+
+### 客户端配置信息
+
+**已配置的OAuth2客户端**：
+- **客户端ID**: `ai-robot-client`
+- **客户端密钥**: `secret123`
+- **授权端点**: `http://localhost:8081/oauth2/authorize`
+- **令牌端点**: `http://localhost:8081/oauth2/token`
+- **用户信息端点**: `http://localhost:8081/oauth2/userinfo`
+
+⚠️ **重要提示**：生产环境中请妥善保管客户端密钥，不要在前端代码中暴露。
+
+### 快速测试
+
+使用cURL测试完整的授权流程：
+
+```bash
+# 1. 引导用户到授权页面（在浏览器中打开）
+open "http://localhost:8081/oauth2/authorize?client_id=ai-robot-client&redirect_uri=http://localhost:8083/callback&response_type=code&scope=read,write,user_info,ai_chat"
+
+# 2. 登录后获取授权码，然后使用授权码换取令牌
+curl -X POST http://localhost:8081/oauth2/token \
+  -H "Content-Type: application/json" \
+  -d '{
+    "grant_type": "authorization_code",
+    "code": "{授权码}",
+    "client_id": "ai-robot-client",
+    "client_secret": "secret123",
+    "redirect_uri": "http://localhost:8083/callback.html"
+  }'
+
+# 3. 使用访问令牌调用AI机器人API
+curl http://localhost:8083/api/ai/robot/public \
+  -H "Authorization: Bearer {access_token}"
+```
+
+更多SSO使用详情请参考：[SSO使用指南](../../docs/SSO.md)
 
 ## 📡 接口列表
 
@@ -514,19 +647,64 @@ curl -X GET "http://localhost:8083/api/ai/robot/page?pageNum=1&pageSize=10&keywo
 ### JavaScript/TypeScript
 
 ```typescript
+// OAuth2授权流程
+async function authorize() {
+  const state = Math.random().toString(36).substring(7);
+  sessionStorage.setItem('oauth_state', state);
+  
+  const authUrl = `http://localhost:8081/oauth2/authorize?` +
+    `client_id=ai-robot-client&` +
+    `redirect_uri=${encodeURIComponent('http://localhost:8083/callback')}&` +
+    `response_type=code&` +
+    `scope=read,write,user_info,ai_chat&` +
+    `state=${state}`;
+  
+  window.location.href = authUrl;
+}
+
+// 使用授权码换取令牌
+async function exchangeToken(code: string) {
+  const response = await fetch('http://localhost:8081/oauth2/token', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: new URLSearchParams({
+      grant_type: 'authorization_code',
+      code: code,
+      client_id: 'ai-robot-client',
+      client_secret: 'secret123',
+      redirect_uri: 'http://localhost:8083/callback'
+    })
+  });
+  
+  const data = await response.json();
+  localStorage.setItem('access_token', data.data.access_token);
+  localStorage.setItem('refresh_token', data.data.refresh_token);
+  return data;
+}
+
 // 发送聊天消息
 const sendMessage = async (message: string) => {
+  const accessToken = localStorage.getItem('access_token');
+  
   const response = await fetch('http://localhost:8083/api/ai/chat/send', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+      'Authorization': `Bearer ${accessToken}`
     },
     body: JSON.stringify({
       robotId: '1',
       message: message
     })
   });
+  
+  if (response.status === 401) {
+    // Token过期，需要重新授权
+    authorize();
+    return;
+  }
   
   return await response.json();
 };

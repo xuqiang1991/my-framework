@@ -462,7 +462,7 @@
         // 全局变量
         let currentRobotId = null;
         let currentConversationId = null;
-        let token = null;
+        let token = null;  // 访问令牌（access_token）
         let username = null;
 
         // API配置
@@ -476,12 +476,29 @@
         // 初始化页面
         async function initPage() {
             // 检查登录状态
-            token = localStorage.getItem('token');
+            // 获取访问令牌
+            token = localStorage.getItem('access_token');
             username = localStorage.getItem('username');
             
+            // 检查访问令牌是否存在
             if (!token) {
+                console.log('未找到访问令牌，跳转到登录页面');
                 window.location.href = 'login.html';
                 return;
+            }
+            
+            // 检查令牌是否过期
+            const expiresAt = localStorage.getItem('token_expires_at');
+            if (expiresAt && Date.now() > parseInt(expiresAt)) {
+                console.log('访问令牌已过期，尝试刷新');
+                // 尝试刷新令牌
+                const refreshSuccess = await refreshAccessToken();
+                if (!refreshSuccess) {
+                    console.log('刷新令牌失败，跳转到登录页面');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                token = localStorage.getItem('access_token');
             }
 
             // 显示用户信息
@@ -506,10 +523,15 @@
             });
         }
 
-        // 加载机器人列表
+        // 加载机器人列表（公开接口，不需要token）
         async function loadRobots() {
             try {
                 const response = await fetch(`${API_BASE_URL}/robot/public`);
+                
+                if (!response.ok) {
+                    throw new Error('加载机器人列表失败');
+                }
+                
                 const robots = await response.json();
 
                 const robotList = document.getElementById('robotList');
@@ -631,6 +653,19 @@
                         hideTypingIndicator();
                         addMessage('assistant', data.content);
                     }, 500);
+                } else if (response.status === 401) {
+                    // Token过期或无效，尝试刷新
+                    hideTypingIndicator();
+                    const refreshed = await refreshAccessToken();
+                    if (refreshed) {
+                        token = localStorage.getItem('access_token');
+                        addMessage('assistant', '会话已刷新，请重新发送消息。');
+                    } else {
+                        addMessage('assistant', '登录已过期，请重新登录。');
+                        setTimeout(() => {
+                            window.location.href = 'login.html';
+                        }, 2000);
+                    }
                 } else {
                     hideTypingIndicator();
                     addMessage('assistant', `抱歉，发生了错误: ${data.message || '未知错误'}`);
@@ -720,10 +755,56 @@
             return div.innerHTML;
         }
 
+        // 刷新访问令牌
+        async function refreshAccessToken() {
+            const refreshToken = localStorage.getItem('refresh_token');
+            if (!refreshToken) {
+                return false;
+            }
+
+            try {
+                // 构建请求体（JSON格式，因为auth服务使用@RequestBody接收）
+                const requestBody = {
+                    grant_type: 'refresh_token',
+                    refresh_token: refreshToken,
+                    client_id: 'ai-robot-client',
+                    client_secret: 'secret123'
+                };
+
+                const response = await fetch('http://localhost:8081/oauth2/token', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                const data = await response.json();
+                if (data.code === 200 && data.data && data.data.access_token) {
+                    localStorage.setItem('access_token', data.data.access_token);
+                    if (data.data.refresh_token) {
+                        localStorage.setItem('refresh_token', data.data.refresh_token);
+                    }
+                    if (data.data.expires_in) {
+                        const expiresAt = Date.now() + (data.data.expires_in * 1000);
+                        localStorage.setItem('token_expires_at', expiresAt.toString());
+                    }
+                    return true;
+                }
+            } catch (error) {
+                console.error('刷新令牌失败:', error);
+            }
+            return false;
+        }
+
         // 退出登录
         function logout() {
             if (confirm('确定要退出登录吗？')) {
-                localStorage.removeItem('token');
+                // 清除所有令牌信息
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('refresh_token');
+                localStorage.removeItem('token_expires_at');
+                localStorage.removeItem('token_expires_in');
                 localStorage.removeItem('username');
                 localStorage.removeItem('userId');
                 window.location.href = 'login.html';

@@ -253,10 +253,27 @@ framework-ai-robot/
 3. **数据隔离**：使用独立数据库，避免与其他服务数据混淆
 4. **错误处理**：建议在业务代码中增加完善的错误处理和重试机制
 
+## 🔐 认证说明
+
+AI机器人服务使用**SSO（OAuth2）认证**，不提供直接登录接口。需要通过OAuth2授权流程获取访问令牌。
+
+**快速开始**：
+1. 引导用户到授权页面：`http://localhost:8081/oauth2/authorize?client_id=ai-robot-client&redirect_uri=http://localhost:8083/callback&response_type=code&scope=read,write,user_info,ai_chat`
+2. 用户登录后获取授权码
+3. 使用授权码换取访问令牌：`POST http://localhost:8081/oauth2/token`
+4. 使用访问令牌调用API：`Authorization: Bearer {access_token}`
+
+**客户端信息**：
+- 客户端ID: `ai-robot-client`
+- 客户端密钥: `secret123`
+
+详细认证流程请参考：[认证指南](./docs/AUTHENTICATION.md)
+
 ## 📚 更多文档
 
 - **[部署指南](./docs/DEPLOYMENT.md)** - 详细的部署和配置说明
 - **[API文档](./docs/API.md)** - 完整的API接口文档
+- **[认证指南](./docs/AUTHENTICATION.md)** - OAuth2认证详细说明
 - **[数据库脚本](./sql/)** - 数据库初始化和数据脚本
 
 ## 🔗 相关链接

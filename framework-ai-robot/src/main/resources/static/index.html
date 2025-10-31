@@ -251,14 +251,27 @@
             }
         }
 
-        // 检查是否已登录
-        const token = localStorage.getItem('token');
-        if (token) {
-            // 已登录，显示"进入对话"按钮
-            const primaryBtn = document.querySelector('.btn-primary');
-            primaryBtn.textContent = '进入对话';
-            primaryBtn.href = 'chat.html';
-        }
+        // 页面加载时检查登录状态
+        document.addEventListener('DOMContentLoaded', function() {
+            // 检查是否已登录（使用access_token）
+            const accessToken = localStorage.getItem('access_token');
+            if (accessToken) {
+                // 检查令牌是否过期
+                const expiresAt = localStorage.getItem('token_expires_at');
+                if (expiresAt && Date.now() > parseInt(expiresAt)) {
+                    // 令牌已过期，清除并显示登录按钮
+                    localStorage.removeItem('access_token');
+                    localStorage.removeItem('refresh_token');
+                    localStorage.removeItem('token_expires_at');
+                    return;
+                }
+                
+                // 已登录，显示"进入对话"按钮
+                const primaryBtn = document.querySelector('.btn-primary');
+                primaryBtn.textContent = '进入对话';
+                primaryBtn.href = 'chat.html';
+            }
+        });
     </script>
 </body>
 </html>

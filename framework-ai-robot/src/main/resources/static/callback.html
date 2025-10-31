@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>授权回调 - AI机器人</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .callback-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 450px;
+            width: 100%;
+            overflow: hidden;
+            animation: slideIn 0.5s ease-out;
+            text-align: center;
+            padding: 50px 30px;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .status-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .status-icon.success {
+            color: #4caf50;
+        }
+
+        .status-icon.error {
+            color: #f44336;
+        }
+
+        .status-icon.loading {
+            color: #667eea;
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .message {
+            color: #666;
+            font-size: 15px;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .error-details {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            text-align: left;
+        }
+
+        .btn-retry {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-retry:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="callback-container" id="callbackContainer">
+        <!-- 加载中状态 -->
+        <div id="loadingState">
+            <div class="status-icon loading">⚙️</div>
+            <h1>正在处理授权...</h1>
+            <p class="message">请稍候，我们正在为您完成登录授权</p>
+        </div>
+
+        <!-- 成功状态 -->
+        <div id="successState" style="display: none;">
+            <div class="status-icon success">✅</div>
+            <h1>授权成功</h1>
+            <p class="message">正在跳转到AI机器人服务...</p>
+        </div>
+
+        <!-- 错误状态 -->
+        <div id="errorState" style="display: none;">
+            <div class="status-icon error">❌</div>
+            <h1>授权失败</h1>
+            <div class="error-details" id="errorDetails"></div>
+            <button class="btn-retry" onclick="window.location.href='login.html'">
+                返回登录
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // OAuth2配置（与login.html保持一致）
+        const OAUTH2_CONFIG = {
+            AUTH_SERVER: 'http://localhost:8081',
+            CLIENT_ID: 'ai-robot-client',
+            REDIRECT_URI: window.location.origin + '/callback.html'
+        };
+
+        // 页面加载完成后处理回调
+        document.addEventListener('DOMContentLoaded', async function() {
+            // 获取URL参数
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+            const state = urlParams.get('state');
+            const error = urlParams.get('error');
+            const errorDescription = urlParams.get('error_description');
+
+            // 检查是否有错误
+            if (error) {
+                showError(errorDescription || error || '授权失败');
+                return;
+            }
+
+            // 验证state参数
+            const savedState = sessionStorage.getItem('oauth_state');
+            if (!state || state !== savedState) {
+                showError('State验证失败，可能存在安全风险，请重新登录');
+                return;
+            }
+
+            // 验证授权码
+            if (!code) {
+                showError('未收到授权码，请重新登录');
+                return;
+            }
+
+            // 使用授权码换取访问令牌
+            try {
+                await exchangeToken(code);
+            } catch (error) {
+                console.error('换取令牌失败:', error);
+                showError('获取访问令牌失败: ' + error.message);
+            }
+        });
+
+        // 使用授权码换取访问令牌
+        async function exchangeToken(code) {
+            try {
+                // 构建请求体（JSON格式，因为auth服务使用@RequestBody接收）
+                const requestBody = {
+                    grant_type: 'authorization_code',
+                    code: code,
+                    client_id: OAUTH2_CONFIG.CLIENT_ID,
+                    client_secret: OAUTH2_CONFIG.CLIENT_SECRET,
+                    redirect_uri: OAUTH2_CONFIG.REDIRECT_URI
+                };
+
+                // 调用令牌端点
+                const response = await fetch(`${OAUTH2_CONFIG.AUTH_SERVER}/oauth2/token`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || '获取令牌失败');
+                }
+
+                if (data.code !== 200 || !data.data || !data.data.access_token) {
+                    throw new Error(data.message || '响应数据格式错误');
+                }
+
+                // 保存令牌信息
+                const tokenData = data.data;
+                localStorage.setItem('access_token', tokenData.access_token);
+                
+                if (tokenData.refresh_token) {
+                    localStorage.setItem('refresh_token', tokenData.refresh_token);
+                }
+                
+                if (tokenData.expires_in) {
+                    // 计算过期时间
+                    const expiresAt = Date.now() + (tokenData.expires_in * 1000);
+                    localStorage.setItem('token_expires_at', expiresAt.toString());
+                    localStorage.setItem('token_expires_in', tokenData.expires_in.toString());
+                }
+
+                // 清理sessionStorage中的OAuth2状态
+                sessionStorage.removeItem('oauth_state');
+                sessionStorage.removeItem('oauth_redirect_uri');
+
+                // 获取用户信息
+                await loadUserInfo(tokenData.access_token);
+
+                // 显示成功状态
+                showSuccess();
+
+                // 延迟跳转到聊天页面
+                setTimeout(() => {
+                    window.location.href = 'chat.html';
+                }, 1500);
+
+            } catch (error) {
+                console.error('Exchange token error:', error);
+                throw error;
+            }
+        }
+
+        // 显示成功状态
+        function showSuccess() {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('errorState').style.display = 'none';
+            document.getElementById('successState').style.display = 'block';
+        }
+
+        // 获取用户信息
+        async function loadUserInfo(accessToken) {
+            try {
+                const response = await fetch(`${OAUTH2_CONFIG.AUTH_SERVER}/oauth2/userinfo`, {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`
+                    }
+                });
+
+                const data = await response.json();
+                if (data.code === 200 && data.data) {
+                    // 保存用户信息
+                    if (data.data.username) {
+                        localStorage.setItem('username', data.data.username);
+                    }
+                    if (data.data.userId) {
+                        localStorage.setItem('userId', data.data.userId);
+                    }
+                    if (data.data.nickname) {
+                        localStorage.setItem('nickname', data.data.nickname);
+                    }
+                }
+            } catch (error) {
+                console.warn('获取用户信息失败:', error);
+                // 不影响主流程，继续执行
+            }
+        }
+
+        // 显示错误状态
+        function showError(message) {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('successState').style.display = 'none';
+            document.getElementById('errorState').style.display = 'block';
+            document.getElementById('errorDetails').textContent = message;
+        }
+    </script>
+</body>
+</html>
+

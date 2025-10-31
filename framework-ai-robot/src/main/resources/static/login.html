@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI机器人 - 登录</title>
+    <title>AI机器人 - 登录授权</title>
     <style>
         * {
             margin: 0;
@@ -27,7 +27,7 @@
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             overflow: hidden;
             width: 100%;
-            max-width: 400px;
+            max-width: 450px;
             animation: slideIn 0.5s ease-out;
         }
 
@@ -45,8 +45,13 @@
         .login-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 40px 30px;
+            padding: 50px 30px;
             text-align: center;
+        }
+
+        .login-header .logo-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
         }
 
         .login-header h1 {
@@ -56,43 +61,40 @@
 
         .login-header p {
             opacity: 0.9;
-            font-size: 14px;
+            font-size: 15px;
         }
 
         .login-body {
             padding: 40px 30px;
         }
 
-        .form-group {
-            margin-bottom: 25px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #333;
-            font-weight: 500;
-            font-size: 14px;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid #e0e0e0;
+        .auth-info {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
             border-radius: 10px;
+            margin-bottom: 30px;
+        }
+
+        .auth-info h3 {
+            color: #667eea;
+            font-size: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .auth-info p {
+            color: #666;
             font-size: 14px;
-            transition: all 0.3s;
+            line-height: 1.6;
+            margin-bottom: 8px;
         }
 
-        .form-group input:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .btn-login {
+        .btn-auth {
             width: 100%;
-            padding: 14px;
+            padding: 16px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
@@ -101,42 +103,76 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
 
-        .btn-login:hover {
+        .btn-auth:hover {
             transform: translateY(-2px);
             box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
         }
 
-        .btn-login:active {
+        .btn-auth:active {
             transform: translateY(0);
         }
 
-        .btn-login:disabled {
+        .btn-auth:disabled {
             opacity: 0.6;
             cursor: not-allowed;
             transform: none;
         }
 
-        .error-message {
-            background: #fee;
-            color: #c33;
-            padding: 12px 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            font-size: 14px;
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
             display: none;
-            animation: shake 0.5s;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
         }
 
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-10px); }
-            75% { transform: translateX(10px); }
+        .loading-overlay.show {
+            display: flex;
         }
 
-        .error-message.show {
-            display: block;
+        .loading-content {
+            background: white;
+            padding: 30px 40px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .loading-content .loading {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(102, 126, 234, 0.3);
+            border-top-color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .loading-content p {
+            color: #666;
+            font-size: 16px;
         }
 
         .demo-info {
@@ -158,60 +194,25 @@
         .demo-info p {
             margin: 5px 0;
         }
-
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: white;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
     </style>
 </head>
 <body>
     <div class="login-container">
         <div class="login-header">
-            <h1>🤖 AI机器人</h1>
-            <p>登录后开始智能对话</p>
+            <div class="logo-icon">🤖</div>
+            <h1>AI机器人服务</h1>
+            <p>统一登录授权</p>
         </div>
         <div class="login-body">
-            <div class="error-message" id="errorMessage"></div>
-            
-            <form id="loginForm">
-                <div class="form-group">
-                    <label for="username">用户名</label>
-                    <input 
-                        type="text" 
-                        id="username" 
-                        name="username" 
-                        placeholder="请输入用户名"
-                        required
-                        autocomplete="username"
-                    >
-                </div>
-                
-                <div class="form-group">
-                    <label for="password">密码</label>
-                    <input 
-                        type="password" 
-                        id="password" 
-                        name="password" 
-                        placeholder="请输入密码"
-                        required
-                        autocomplete="current-password"
-                    >
-                </div>
-                
-                <button type="submit" class="btn-login" id="loginBtn">
-                    登录
-                </button>
-            </form>
+            <div class="auth-info">
+                <h3>🔐 SSO统一认证</h3>
+                <p>使用SSO（单点登录）系统进行统一认证和授权</p>
+                <p>登录后将自动跳转回AI机器人服务</p>
+            </div>
+
+            <button class="btn-auth" id="authBtn" onclick="startOAuth2Auth()">
+                <span>前往登录授权</span>
+            </button>
 
             <div class="demo-info">
                 <strong>💡 测试账号</strong>
@@ -221,110 +222,101 @@
         </div>
     </div>
 
+    <!-- 加载提示 -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading"></div>
+            <p>正在跳转到登录页面...</p>
+        </div>
+    </div>
+
     <script>
-        // API配置
-        const API_CONFIG = {
-            AUTH_URL: 'http://localhost:8081/api/auth/login',  // 认证服务
-            GATEWAY_URL: 'http://localhost:8080'               // 网关地址
+        // OAuth2配置
+        const OAUTH2_CONFIG = {
+            // 认证服务地址
+            AUTH_SERVER: 'http://localhost:8081',
+            // 客户端ID
+            CLIENT_ID: 'ai-robot-client',
+            // 客户端密钥（仅用于后端交换令牌，前端不应暴露）
+            CLIENT_SECRET: 'secret123',
+            // 重定向URI（回调地址）
+            REDIRECT_URI: window.location.origin + '/callback.html',
+            // 授权范围
+            SCOPE: 'read,write,user_info,ai_chat',
+            // 响应类型
+            RESPONSE_TYPE: 'code'
         };
 
         // 页面加载完成后的初始化
         document.addEventListener('DOMContentLoaded', function() {
-            // 检查是否已登录
-            const token = localStorage.getItem('token');
-            if (token) {
-                // 如果已有token，直接跳转到聊天页面
+            // 检查是否已有访问令牌
+            const accessToken = localStorage.getItem('access_token');
+            if (accessToken) {
+                // 验证令牌是否有效（可选）
+                // 如果有效，直接跳转到聊天页面
                 window.location.href = 'chat.html';
                 return;
             }
 
-            // 绑定表单提交事件
-            const loginForm = document.getElementById('loginForm');
-            loginForm.addEventListener('submit', handleLogin);
-
-            // 回车键提交
-            document.getElementById('password').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    handleLogin(e);
-                }
-            });
+            // 检查URL参数中是否有错误信息
+            const urlParams = new URLSearchParams(window.location.search);
+            const error = urlParams.get('error');
+            const errorDescription = urlParams.get('error_description');
+            
+            if (error) {
+                alert('授权失败: ' + (errorDescription || error));
+            }
         });
 
-        // 处理登录
-        async function handleLogin(e) {
-            e.preventDefault();
-            
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value;
-            const loginBtn = document.getElementById('loginBtn');
-            const errorMessage = document.getElementById('errorMessage');
+        // 开始OAuth2授权流程
+        function startOAuth2Auth() {
+            const authBtn = document.getElementById('authBtn');
+            const loadingOverlay = document.getElementById('loadingOverlay');
 
-            // 验证输入
-            if (!username || !password) {
-                showError('请输入用户名和密码');
-                return;
-            }
+            // 显示加载提示
+            loadingOverlay.classList.add('show');
+            authBtn.disabled = true;
+            authBtn.innerHTML = '<span class="loading"></span> 准备跳转...';
 
-            // 禁用按钮，显示加载状态
-            loginBtn.disabled = true;
-            loginBtn.innerHTML = '<span class="loading"></span> 登录中...';
-            errorMessage.classList.remove('show');
+            // 生成随机state用于防CSRF攻击
+            const state = generateRandomString(32);
+            sessionStorage.setItem('oauth_state', state);
+            sessionStorage.setItem('oauth_redirect_uri', OAUTH2_CONFIG.REDIRECT_URI);
 
-            try {
-                // 调用登录API
-                const response = await fetch(API_CONFIG.AUTH_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        username: username,
-                        password: password
-                    })
-                });
+            // 构建授权URL
+            const authUrl = buildAuthUrl(state);
 
-                const data = await response.json();
+            console.log('跳转到授权页面:', authUrl);
 
-                if (response.ok && data.token) {
-                    // 登录成功，保存token和用户信息
-                    localStorage.setItem('token', data.token);
-                    localStorage.setItem('username', username);
-                    localStorage.setItem('userId', data.userId || '1');
-
-                    // 显示成功提示
-                    loginBtn.innerHTML = '✓ 登录成功';
-                    loginBtn.style.background = '#4caf50';
-
-                    // 延迟跳转，让用户看到成功提示
-                    setTimeout(() => {
-                        window.location.href = 'chat.html';
-                    }, 500);
-                } else {
-                    // 登录失败
-                    showError(data.message || '登录失败，请检查用户名和密码');
-                    resetLoginButton();
-                }
-            } catch (error) {
-                console.error('登录错误:', error);
-                showError('网络错误，请检查认证服务是否启动');
-                resetLoginButton();
-            }
+            // 延迟一下，让用户看到加载提示
+            setTimeout(() => {
+                // 跳转到SSO授权页面
+                window.location.href = authUrl;
+            }, 300);
         }
 
-        // 显示错误信息
-        function showError(message) {
-            const errorMessage = document.getElementById('errorMessage');
-            errorMessage.textContent = message;
-            errorMessage.classList.add('show');
+        // 构建授权URL
+        function buildAuthUrl(state) {
+            const params = new URLSearchParams({
+                client_id: OAUTH2_CONFIG.CLIENT_ID,
+                redirect_uri: OAUTH2_CONFIG.REDIRECT_URI,
+                response_type: OAUTH2_CONFIG.RESPONSE_TYPE,
+                scope: OAUTH2_CONFIG.SCOPE,
+                state: state
+            });
+
+            return `${OAUTH2_CONFIG.AUTH_SERVER}/oauth2/authorize?${params.toString()}`;
         }
 
-        // 重置登录按钮
-        function resetLoginButton() {
-            const loginBtn = document.getElementById('loginBtn');
-            loginBtn.disabled = false;
-            loginBtn.innerHTML = '登录';
+        // 生成随机字符串
+        function generateRandomString(length) {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let result = '';
+            for (let i = 0; i < length; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
         }
     </script>
 </body>
 </html>
-
