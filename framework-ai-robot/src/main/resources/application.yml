@@ -171,3 +171,9 @@ sa-token:
   # 是否从请求头读取token
   is-read-header: true
 
+# AI机器人服务配置
+ai-robot:
+  # 认证服务地址（用于验证OAuth2 token）
+  auth:
+    server-url: ${AI_ROBOT_AUTH_SERVER_URL:http://auth:8081}
+
