@@ -250,7 +250,7 @@
         // 页面加载完成后的初始化
         document.addEventListener('DOMContentLoaded', function() {
             // 检查是否已有访问令牌
-            const accessToken = localStorage.getItem('access_token');
+            const accessToken = localStorage.getItem('token');
             if (accessToken) {
                 // 验证令牌是否有效（可选）
                 // 如果有效，直接跳转到聊天页面

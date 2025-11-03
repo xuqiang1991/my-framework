@@ -229,8 +229,8 @@
                 sessionStorage.removeItem('oauth_state');
                 sessionStorage.removeItem('oauth_redirect_uri');
 
-                // 获取用户信息
-                await loadUserInfo(tokenData.access_token);
+                // 将登录信息注入到Sa-Token并获取用户信息
+                await injectToSaToken(tokenData.access_token);
 
                 // 显示成功状态
                 showSuccess();
@@ -253,30 +253,60 @@
             document.getElementById('successState').style.display = 'block';
         }
 
-        // 获取用户信息
-        async function loadUserInfo(accessToken) {
+        // 将OAuth2登录信息注入到Sa-Token并获取用户信息
+        async function injectToSaToken(accessToken) {
             try {
-                const response = await fetch(`${OAUTH2_CONFIG.AUTH_SERVER}/oauth2/userinfo`, {
+                // 调用认证接口，后端会：
+                // 1. 触发拦截器将OAuth2 token注入到Sa-Token
+                // 2. 调用 /oauth2/userinfo 获取用户信息
+                // 3. 返回用户信息
+                const response = await fetch(`${window.location.origin}/api/ai/auth/login`, {
+                    method: 'POST',
                     headers: {
-                        'Authorization': `Bearer ${accessToken}`
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json'
                     }
                 });
 
                 const data = await response.json();
                 if (data.code === 200 && data.data) {
-                    // 保存用户信息
-                    if (data.data.username) {
-                        localStorage.setItem('username', data.data.username);
+                    console.log('登录信息已成功注入到Sa-Token:', data.data);
+                    
+                    // 保存Sa-Token
+                    if (data.data.token) {
+                        localStorage.setItem('token', data.data.token);
                     }
-                    if (data.data.userId) {
+                    
+                    // 保存用户信息到localStorage
+                    if (data.data.userInfo) {
+                        const userInfo = data.data.userInfo;
+                        if (userInfo.username) {
+                            localStorage.setItem('username', userInfo.username);
+                        }
+                        if (userInfo.userId) {
+                            localStorage.setItem('userId', userInfo.userId);
+                        }
+                        if (userInfo.nickname) {
+                            localStorage.setItem('nickname', userInfo.nickname);
+                        }
+                        if (userInfo.email) {
+                            localStorage.setItem('email', userInfo.email);
+                        }
+                        if (userInfo.phone) {
+                            localStorage.setItem('phone', userInfo.phone);
+                        }
+                        if (userInfo.avatar) {
+                            localStorage.setItem('avatar', userInfo.avatar);
+                        }
+                    } else if (data.data.userId) {
+                        // 如果没有userInfo，至少保存userId
                         localStorage.setItem('userId', data.data.userId);
                     }
-                    if (data.data.nickname) {
-                        localStorage.setItem('nickname', data.data.nickname);
-                    }
+                } else {
+                    console.warn('注入Sa-Token失败:', data.message);
                 }
             } catch (error) {
-                console.warn('获取用户信息失败:', error);
+                console.warn('注入Sa-Token失败:', error);
                 // 不影响主流程，继续执行
             }
         }

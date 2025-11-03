@@ -477,13 +477,13 @@
         async function initPage() {
             // 检查登录状态
             // 获取访问令牌
-            token = localStorage.getItem('access_token');
+            token = localStorage.getItem('token');
             username = localStorage.getItem('username');
             
             // 检查访问令牌是否存在
             if (!token) {
                 console.log('未找到访问令牌，跳转到登录页面');
-                window.location.href = 'login.html';
+                window.location.href = 'index.html';
                 return;
             }
             
@@ -642,7 +642,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
+                        'Authorization': `${token}`
                     },
                     body: JSON.stringify({
                         robotId: currentRobotId,
@@ -846,6 +846,7 @@
                 localStorage.removeItem('token_expires_in');
                 localStorage.removeItem('username');
                 localStorage.removeItem('userId');
+                localStorage.removeItem('token');
                 window.location.href = 'login.html';
             }
         }
